@@ -1,0 +1,68 @@
+// Prisma schema — portable across SQLite (local dev) and PostgreSQL (production).
+// For production: change provider to "postgresql" and set DATABASE_URL accordingly.
+// See README → Database setup.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  role         String     @default("admin")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  notes        LeadNote[]
+}
+
+model Lead {
+  id               String     @id @default(cuid())
+  name             String
+  businessName     String?
+  email            String?
+  phone            String
+  city             String?
+  service          String
+  currentSystem    String?
+  message          String
+  budget           String?
+  preferredContact String?
+  source           String     @default("website-contact")
+  status           String     @default("new")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  notes            LeadNote[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId    String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  event     String
+  path      String?
+  meta      String?
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+}
